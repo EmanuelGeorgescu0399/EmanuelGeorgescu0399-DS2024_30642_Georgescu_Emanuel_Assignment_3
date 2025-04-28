@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Emipolicluj1999!
+      MYSQL_DATABASE: device3
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pEmipolicluj1999!"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  device:
+    build: ./device
+    container_name: device
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/device3
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Emipolicluj1999!
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+    command: ["sh", "-c", "sleep 10 && java -jar app.jar"]
+
+  energy-management:
+    build: ./energy-management
+    container_name: energy-management
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/device3
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Emipolicluj1999!
+      DEVICE_SERVICE_URL: http://device:8082
+    depends_on:
+      mysql:
+        condition: service_healthy
+      device:
+        condition: service_started
+    networks:
+      - backend
+    command: ["sh", "-c", "sleep 10 && java -jar app.jar"]
+
+  chat:
+    build: ./chat
+    container_name: chat
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/device3
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Emipolicluj1999!
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend
+    command: ["sh", "-c", "sleep 10 && java -jar app.jar"]
+
+  frontend:
+    build: ./energy-management-frontend
+    container_name: frontend
+    restart: always
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+      - ./energy-management-frontend/build:/usr/share/nginx/html
+    depends_on:
+      - frontend
+      - energy-management
+      - chat
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  mysql-data:
