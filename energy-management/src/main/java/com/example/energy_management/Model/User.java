@@ -6,7 +6,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "app_user")
-@Data // Folosim @Data în loc de mai multe adnotări individuale
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,15 +14,15 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId; // Schimbăm numele din `id` în `userId` pentru unicitate
+    private Long userId;
 
-    private String username; // Schimbăm `name` în `username`
-    private String userPassword; // Schimbăm `password` în `userPassword`
+    private String username;
+    private String userPassword;
 
-    @Enumerated(EnumType.STRING) // Asigurăm stocarea ca text a rolului
-    private Role userRole; // Schimbăm `role` în `userRole`
+    @Enumerated(EnumType.STRING)
+    private Role userRole;
 
-    // Metodă personalizată pentru a afișa datele fără parola (dacă este nevoie)
+
     @Override
     public String toString() {
         return "AppUser{" +
